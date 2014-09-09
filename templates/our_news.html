@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>News</title>
+</head>
+<body>
+{% block content %}
+{#<a href="/"></a><br>#}
+
+<h2 style="color: blue">Новости за сегодня, {{ current_time }}</h2>
+    </br></br></br>
+
+<table style="width: 70%">
+    {% for i in records %}
+        <tr>
+            [{{ i.category }}]    <b>{{ i.header }}</b>
+        </tr>
+        <br>
+        <tr>
+            {{ i.text }}
+            <br>
+            <a target="_blank" href={{ i.url }}>посмотреть эту новость на Ленте</a>
+        </tr>
+        <br><br>
+
+        <br><br>
+    {% endfor %}
+</table>
+
+
+{% endblock content %}
+</body>
+</html>
