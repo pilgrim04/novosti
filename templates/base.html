@@ -42,11 +42,10 @@
 
 
 {#                        <li><a href="/">Парсить</a></li>#}
-                        {{ current_time }} </br>
-                        {{ tt }}
                         <form method="post">{% csrf_token %}
                             <input type="submit" name="go_parse_lenta_ru" value="parse">
                         </form>
+                        <a href="/">на главную</a>
 
 {#                        <li><a href="#">#</a></li>#}
 {#                        <li><a href="#">#</a></li>#}

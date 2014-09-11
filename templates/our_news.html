@@ -9,17 +9,16 @@
 {% block content %}
 {#<a href="/"></a><br>#}
 
-<h2 style="color: blue">Новости за сегодня, {{ current_time }}</h2>
-    </br></br></br>
 
-<table style="width: 70%">
+<table style="width: 70%" >
     {% for i in records %}
         <tr>
             [{{ i.category }}]    <b>{{ i.header }}</b>
         </tr>
         <br>
         <tr>
-            {{ i.text }}
+            {{ i.text[:140] }}... <a href="{{ i.url[16:] }}">подробнее</a>
+            {# 140 - ограничение ради контента. 16 - режу исходный урл ленты, переделываю в свой #}
             <br>
             <a target="_blank" href={{ i.url }}>посмотреть эту новость на Ленте</a>
         </tr>
@@ -29,7 +28,7 @@
     {% endfor %}
 </table>
 
-
+<a href="news/{{ yyyy }}/{{ mm }}/{{ dd }}">Читать все сегодняшние новости</a>
 {% endblock content %}
 </body>
 </html>

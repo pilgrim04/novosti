@@ -10,7 +10,16 @@ urlpatterns = patterns('',
     # url(r'^blog/', include('blog.urls')),
 
     # url(r'^admin/', include(admin.site.urls)),
-    url(r'^$', MyPageView.as_view(), name='page'),
-    url(r'^our-news/$', OurNews.as_view(), name='our_news'),
+
+
+    url(r'^$',
+        OurNews.as_view(),
+        name='our_news'),
+    url(r'^news/(?P<year>[0-9]{4})/(?P<month>[0-9]{2})/(?P<day>[0-9]{2})/(?P<article>[A-Za-z0-9]+)',
+        ArticleView.as_view(),
+        name='article'),
+    url(r'^news/(?P<year>[0-9]{4})/(?P<month>[0-9]{2})/(?P<day>[0-9]{2})/$',
+        AllNewsView.as_view(),
+        name='allnews')
 
 )

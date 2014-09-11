@@ -42,15 +42,24 @@ class OurNews(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(OurNews, self).get_context_data(**kwargs)
+        # context['current_time'] = str(datetime.datetime.now().day) + '/' + str(datetime.datetime.now().month) + '/' +\
+        #                 str(datetime.datetime.now().year) + ' ' + str(datetime.datetime.now().hour) + ':' + \
+        #                 str(datetime.datetime.now().minute) + ':' + str(datetime.datetime.now().second) + str(' msk')
+        context['records'] = New.objects.all().order_by('-date')[:3]
+        dd = datetime.datetime.now().day
+        mm = datetime.datetime.now().month
+        yyyy = datetime.datetime.now().year
+        if dd < 10:
+                dd = '0' + str(dd)
+        if mm < 10:
+                mm = '0' + str(mm)
+        context['dd'] = dd
+        context['mm'] = mm
+        context['yyyy'] = yyyy
 
 
 
-        context['current_time'] = str(datetime.datetime.now().day) + '/' + str(datetime.datetime.now().month) + '/' +\
-                        str(datetime.datetime.now().year) + ' ' + str(datetime.datetime.now().hour) + ':' + \
-                        str(datetime.datetime.now().minute) + ':' + str(datetime.datetime.now().second) + str(' msk')
-        context['records'] = New.objects.all().order_by('-date')[:5]
-
-        context['tt'] = int(time.mktime(time.strptime('2000-01-01 12:34:00', '%Y-%m-%d %H:%M:%S')))
+        # context['tt'] = int(time.mktime(time.strptime('2000-01-01 12:34:00', '%Y-%m-%d %H:%M:%S')))
         return context
 
     def post(self, request):
@@ -105,6 +114,7 @@ class OurNews(TemplateView):
                     print counter, 'URL: ', new_url
 
                     # тащим картинки
+                    """
                     img_date_link = 'src="http://icdn.lenta.ru/images/' + str(yyyy) +'/' + str(mm) + '/' + str(dd) + '/'
                     if img_date_link in page:
                         s = page.index(img_date_link)
@@ -112,14 +122,14 @@ class OurNews(TemplateView):
                         try:
                             open_image = urllib2.urlopen(image_url)
                             print open_image
-                            # """ протестить и настроить
-                            out = open("/gallery/img1.jpg", 'wb')
-                            out.write(open_image.read())
-                            out.close()
-                            # """
+                            #  протестить и настроить
+                            # out = open("/gallery/img1.jpg", 'wb')
+                            # out.write(open_image.read())
+                            # out.close()
+                            #
                         except:
                             print 'couldnt open. sorry'
-
+                    """
 
                     if '<title>' in page:
                         start_title = page.index('<title>')
@@ -197,4 +207,32 @@ class OurNews(TemplateView):
                     qty_of_new += 1
 
             print 'updated', qty_of_new, 'news'
-            return HttpResponseRedirect('/our-news/')
+            return HttpResponseRedirect('/')
+
+
+class ArticleView(TemplateView):
+    template_name = 'article.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(ArticleView, self).get_context_data(**kwargs)
+        slug = self.kwargs['article']
+        for rec in New.objects.all():
+            if slug in rec.url:
+                context['article'] = rec
+        return context
+
+
+class AllNewsView(TemplateView):
+    template_name = 'allnews.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(AllNewsView, self).get_context_data(**kwargs)
+        curr_year = self.kwargs.values()[0]
+        curr_day = self.kwargs.values()[1]
+        curr_month = self.kwargs.values()[2]
+        articles = []
+        for rec in New.objects.all():
+            if curr_year in str(rec.date) and curr_month in str(rec.date) and curr_day in str(rec.date):
+                articles.append(rec)
+        context['articles'] = articles
+        return context

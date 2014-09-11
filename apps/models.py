@@ -8,4 +8,3 @@ class New(models.Model):
     category = models.CharField(max_length=256)
     header = models.CharField(max_length=256)
     text = models.TextField()
-
