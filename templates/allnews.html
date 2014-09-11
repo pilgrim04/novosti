@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Новости текущего дня</title>
+</head>
+<body>
+{% block content %}
+
+
+Все 100500 новостей текущего дня:
+    <br><br>
+
+{% for i in articles %}
+    {{ i.header }} <br>
+{% endfor %}
+
+{% endblock content %}
+</body>
+</html>

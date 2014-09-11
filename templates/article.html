@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Заголовок новости</title>
+</head>
+<body>
+{% block content %}
+
+<table style="width: 70%" >
+
+        <tr>
+            [{{ article.category }}]    <b>{{ article.header }}</b>
+        </tr>
+        <br>
+        <tr>
+            {{ article.text }}
+            <br>
+            <a target="_blank" href={{ article.url }}>посмотреть эту новость на Ленте</a>
+        </tr>
+        <br><br>
+
+        <br><br>
+
+</table>
+{% endblock content %}
+</body>
+</html>
