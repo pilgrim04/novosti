@@ -13,21 +13,6 @@ from lenta import *
 import time
 
 
-# class CronTab(object):
-#     def __init__(self, *events):
-#         self.events = events
-#
-#     def run(self):
-#         t=datetime.datetime.now().timetuple()[:5]
-#         while 1:
-#             for e in self.events:
-#                 e.check(t)
-#
-#             t += datetime.timedelta(minutes=1)
-#             while datetime.datetime.now() < t:
-#                 time.sleep((t - datetime.datetime.now()).seconds)
-
-
 class MyPageView(TemplateView):
     template_name = 'page.html'
 
@@ -36,30 +21,27 @@ class MyPageView(TemplateView):
         return context
 
 
-
 class OurNews(TemplateView):
     template_name = 'our_news.html'
 
     def get_context_data(self, **kwargs):
         context = super(OurNews, self).get_context_data(**kwargs)
-        # context['current_time'] = str(datetime.datetime.now().day) + '/' + str(datetime.datetime.now().month) + '/' +\
-        #                 str(datetime.datetime.now().year) + ' ' + str(datetime.datetime.now().hour) + ':' + \
-        #                 str(datetime.datetime.now().minute) + ':' + str(datetime.datetime.now().second) + str(' msk')
-        context['records'] = New.objects.all().order_by('-date')[:3]
+        qty_of_news = 3  # количество новостей на главной
+        context['records'] = New.objects.all().order_by('-date')[:qty_of_news]
+
         dd = datetime.datetime.now().day
         mm = datetime.datetime.now().month
         yyyy = datetime.datetime.now().year
+
         if dd < 10:
                 dd = '0' + str(dd)
         if mm < 10:
                 mm = '0' + str(mm)
+
         context['dd'] = dd
         context['mm'] = mm
         context['yyyy'] = yyyy
 
-
-
-        # context['tt'] = int(time.mktime(time.strptime('2000-01-01 12:34:00', '%Y-%m-%d %H:%M:%S')))
         return context
 
     def post(self, request):
@@ -74,10 +56,9 @@ class OurNews(TemplateView):
                 mm = '0' + str(mm)
             # формируем сегодняшний урл со списком новостей
             today_link = 'http://lenta.ru/news/' + str(yyyy) + '/' + str(mm) + '/' + str(dd) + '/'
-            # today_link = 'http://lenta.ru/news/2014/07/25'
-            # открываем
+
             try:
-                response = urllib2.urlopen(today_link)
+                response = urllib2.urlopen(today_link) # открываем
             except:
                 print 'no url'
             if response.getcode() == 200:
@@ -95,10 +76,21 @@ class OurNews(TemplateView):
                         if word not in massiv_of_pages:
                             massiv_of_pages.append(word)  # массив новых урлов готов
 
+
             # работа на новых страницах
             counter = 0
             all_records = []
             for new_url in massiv_of_pages:
+                #TODO: ускорение парсилки: task #5
+                '''
+                arr = []
+                for i in New.objects.filter(today=date).url
+                    arr.append(i)
+                if new_url not in arr:
+                    идти и парсить
+                else:
+                    continue
+                '''
                 counter += 1
                 if MY_DEBUG:
                     if counter == 6:
@@ -114,22 +106,23 @@ class OurNews(TemplateView):
                     print counter, 'URL: ', new_url
 
                     # тащим картинки
-                    """
-                    img_date_link = 'src="http://icdn.lenta.ru/images/' + str(yyyy) +'/' + str(mm) + '/' + str(dd) + '/'
-                    if img_date_link in page:
-                        s = page.index(img_date_link)
-                        image_url = page[s+5:s+105]
-                        try:
-                            open_image = urllib2.urlopen(image_url)
-                            print open_image
-                            #  протестить и настроить
-                            # out = open("/gallery/img1.jpg", 'wb')
-                            # out.write(open_image.read())
-                            # out.close()
-                            #
-                        except:
-                            print 'couldnt open. sorry'
-                    """
+
+                    # img_date_link = 'src="http://icdn.lenta.ru/images/' + str(yyyy) +'/' + str(mm) + '/' + str(dd) + '/'
+                    # if img_date_link in page:
+                    #     s = page.index(img_date_link)
+                    #     image_url = page[s+5:s+105]
+                    #     print image_url
+                    #     try:
+                        # open_image = urllib2.urlopen(image_url)
+                        # print open_image
+                        # протестить и настроить
+                        # out = open("/gallery/img1.jpg", 'wb')
+                        # out.write(open_image.read())
+                        # out.close()
+                        #
+                        # except:
+                        #     print 'couldnt open. sorry'
+
 
                     if '<title>' in page:
                         start_title = page.index('<title>')
@@ -230,9 +223,15 @@ class AllNewsView(TemplateView):
         curr_year = self.kwargs.values()[0]
         curr_day = self.kwargs.values()[1]
         curr_month = self.kwargs.values()[2]
+        today = curr_year + '-' + curr_month + '-' + curr_day
+        count = 0
         articles = []
-        for rec in New.objects.all():
-            if curr_year in str(rec.date) and curr_month in str(rec.date) and curr_day in str(rec.date):
-                articles.append(rec)
+        for article in New.objects.all():
+            if unicode(article.date) >= today:
+                count += 1
+                articles.append(article)
+
         context['articles'] = articles
+        context['count'] = count
+
         return context
