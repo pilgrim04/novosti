@@ -9,11 +9,12 @@
 {% block content %}
 
 
-Все {{ count }} новостей текущего дня:
+{{ count }} новостей текущего дня:
     <br><br>
 
 {% for i in articles %}
-    {{ i.header }} <br>
+    <a href="{{ i.url[32:] }}">{{ i.header }}</a>
+    <br>
 {% endfor %}
 
 {% endblock content %}

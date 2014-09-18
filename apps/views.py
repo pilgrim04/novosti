@@ -5,8 +5,9 @@ from django.views.generic import FormView
 from django.http import HttpResponseRedirect, HttpResponse
 from forms import *
 import urllib2
-import datetime
 import lxml.html
+from django.utils import timezone  # во всем проекте поменял datetime.datetime на timezone
+
 
 from models import *
 from lenta import *
@@ -29,9 +30,9 @@ class OurNews(TemplateView):
         qty_of_news = 3  # количество новостей на главной
         context['records'] = New.objects.all().order_by('-date')[:qty_of_news]
 
-        dd = datetime.datetime.now().day
-        mm = datetime.datetime.now().month
-        yyyy = datetime.datetime.now().year
+        dd = timezone.now().day
+        mm = timezone.now().month
+        yyyy = timezone.now().year
 
         if dd < 10:
                 dd = '0' + str(dd)
@@ -47,9 +48,9 @@ class OurNews(TemplateView):
     def post(self, request):
         MY_DEBUG = False
         if request.POST:
-            dd = datetime.datetime.now().day
-            mm = datetime.datetime.now().month
-            yyyy = datetime.datetime.now().year
+            dd = timezone.now().day
+            mm = timezone.now().month
+            yyyy = timezone.now().year
             if dd < 10:
                 dd = '0' + str(dd)
             if mm < 10:
@@ -58,16 +59,14 @@ class OurNews(TemplateView):
             today_link = 'http://lenta.ru/news/' + str(yyyy) + '/' + str(mm) + '/' + str(dd) + '/'
 
             try:
-                response = urllib2.urlopen(today_link) # открываем
+                response = urllib2.urlopen(today_link)  # открываем
             except:
                 print 'no url'
+            massiv_of_pages = []
             if response.getcode() == 200:
                 data = response.read()
-                # headers = response.info()
 
-                # собираем ссылки на сегодняшние статьи (новости)
-                massiv_of_pages = []
-                for word in data.split(' '):
+                for word in data.split(' '):  # собираем ссылки на сегодняшние статьи (новости)
                     link = 'href=\"/news/' + str(yyyy) + '/' + str(mm) + '/' + str(dd)
                     if link in word:
                         word = word[6:]
@@ -76,21 +75,11 @@ class OurNews(TemplateView):
                         if word not in massiv_of_pages:
                             massiv_of_pages.append(word)  # массив новых урлов готов
 
-
             # работа на новых страницах
+
             counter = 0
             all_records = []
             for new_url in massiv_of_pages:
-                #TODO: ускорение парсилки: task #5
-                '''
-                arr = []
-                for i in New.objects.filter(today=date).url
-                    arr.append(i)
-                if new_url not in arr:
-                    идти и парсить
-                else:
-                    continue
-                '''
                 counter += 1
                 if MY_DEBUG:
                     if counter == 6:
@@ -105,26 +94,7 @@ class OurNews(TemplateView):
                     page = new_response.read()
                     print counter, 'URL: ', new_url
 
-                    # тащим картинки
-
-                    # img_date_link = 'src="http://icdn.lenta.ru/images/' + str(yyyy) +'/' + str(mm) + '/' + str(dd) + '/'
-                    # if img_date_link in page:
-                    #     s = page.index(img_date_link)
-                    #     image_url = page[s+5:s+105]
-                    #     print image_url
-                    #     try:
-                        # open_image = urllib2.urlopen(image_url)
-                        # print open_image
-                        # протестить и настроить
-                        # out = open("/gallery/img1.jpg", 'wb')
-                        # out.write(open_image.read())
-                        # out.close()
-                        #
-                        # except:
-                        #     print 'couldnt open. sorry'
-
-
-                    if '<title>' in page:
+                    if '<title>' in page:  # парсим заголовок
                         start_title = page.index('<title>')
                         end_title = page.index('</title>')
                         title = page[start_title:end_title]
@@ -143,15 +113,7 @@ class OurNews(TemplateView):
                                 else:
                                     category = i[:-1]
                                 one_record.append(category)
-                    # s = 'id=\"comments-count\"'
-                    # if s in page:
-                    #     print 'comments found!', page.index(s)
-                    #     print page[page.index(s)+20:page.index(s)+25]
                     dom = lxml.html.document_fromstring(page.decode("utf-8"))
-                    quantity_of_articles = 0
-
-                    length_of_string = 0
-                    NORMAL_LENGTH_OF_STRING = 80
 
                     url = new_url
                     one_record.append(url)
@@ -161,7 +123,6 @@ class OurNews(TemplateView):
                         one_record.append(header)
 
                     nomer_slova = 0
-                    # for x in dom.cssselect("div.b-text p"):  # articles
                     for x in dom.cssselect("div.b-text p"):
                         if x.text is not None:  # иногда почему-то x бывает None
                             words = x.text.split()
@@ -174,16 +135,20 @@ class OurNews(TemplateView):
                                 one_record[3] += unicode(word).encode('utf-8') + ' '
 
                             # выравнивание текста до 80 символов
-                            length_of_string += len(word)
-                            if length_of_string > NORMAL_LENGTH_OF_STRING:
-                                one_record[3] += ''
-                                length_of_string = 0
+                            # length_of_string = 0
+                            # NORMAL_LENGTH_OF_STRING = 80
+                            # length_of_string += len(word)
+                            # if length_of_string > NORMAL_LENGTH_OF_STRING:
+                            #     one_record[3] += ''
+                            #     length_of_string = 0
 
                         # содание нового абзаца у себя, если он есть у донора
                         if 0x0a or 0x0d:  # if new line
                             one_record[3] += "\n\n"
                             length_of_string = 0
                 all_records.append(one_record)
+
+            # закончили парсить. сейвим
             all_base = New.objects.all()
             a = []
             for i in all_base:
@@ -191,13 +156,16 @@ class OurNews(TemplateView):
             qty_of_new = 0
             for record in all_records:
                 if record[1] not in a:  # добавляю только те, которых у меня еще нет (новые)
-                    New.objects.create(source='lenta.ru',
-                                       url=record[1],
-                                       date=datetime.datetime.now(),
-                                       category=record[0],
-                                       header=record[2],
-                                       text=record[3])
-                    qty_of_new += 1
+                    try:
+                        New.objects.create(source='lenta.ru',
+                                           url=record[1],
+                                           date=timezone.now(),
+                                           category=record[0],
+                                           header=record[2],
+                                           text=record[3])
+                        qty_of_new += 1
+                    except:  # исключение падения базы из-за какой нить херни
+                        pass
 
             print 'updated', qty_of_new, 'news'
             return HttpResponseRedirect('/')
@@ -209,9 +177,9 @@ class ArticleView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(ArticleView, self).get_context_data(**kwargs)
         slug = self.kwargs['article']
-        for rec in New.objects.all():
-            if slug in rec.url:
-                context['article'] = rec
+        for article in New.objects.all():
+            if slug in article.url:
+                context['article'] = article
         return context
 
 
