@@ -13,18 +13,18 @@
 <table style="width: 70%" >
     {% for i in records %}
         <tr>
-            [{{ i.category }}]    <b>{{ i.header }}</b>
+            [{{ i.category }}]    <a href="{{ i.url[16:] }}"><b>{{ i.header }} </b></a>
         </tr>
         <br>
         <tr>
-            {{ i.text[:140] }}... <a href="{{ i.url[16:] }}">подробнее</a>
-            {# 140 - ограничение ради контента. 16 - режу исходный урл ленты, переделываю в свой #}
-            <br>
-            <a target="_blank" href={{ i.url }}>посмотреть эту новость на Ленте</a>
-        </tr>
-        <br><br>
+            {{ i.text[:i.text.index('.')] }}.
 
-        <br><br>
+        </tr>
+        <br>
+        <img src="{{ i.img }}">
+        {{ i.img }}
+
+        <br>
     {% endfor %}
 </table>
 

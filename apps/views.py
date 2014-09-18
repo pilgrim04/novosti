@@ -13,6 +13,8 @@ from models import *
 from lenta import *
 import time
 
+import os
+
 
 class MyPageView(TemplateView):
     template_name = 'page.html'
@@ -124,6 +126,7 @@ class OurNews(TemplateView):
 
                     nomer_slova = 0
                     for x in dom.cssselect("div.b-text p"):
+
                         if x.text is not None:  # иногда почему-то x бывает None
                             words = x.text.split()
 
@@ -146,6 +149,32 @@ class OurNews(TemplateView):
                         if 0x0a or 0x0d:  # if new line
                             one_record[3] += "\n\n"
                             length_of_string = 0
+
+                    # парсим картинку
+                    flag = 'http://icdn.lenta.ru/images/' + str(yyyy) + '/' + str(mm) + '/' + str(dd) + '/'
+                    if flag in page:
+                        start_img_url = page.index(flag)
+                        end_img_url = start_img_url + 100
+                        img_url = page[start_img_url:end_img_url]
+                        try:
+                            new_page_with_img = urllib2.urlopen(img_url)
+                            if new_page_with_img.getcode() == 200:
+
+                                if not os.path.exists('gallery/' + str(yyyy)):
+                                    os.makedirs('gallery/' + str(yyyy))
+                                if not os.path.exists('gallery/' + str(yyyy) + '/' + str(mm)):
+                                    os.makedirs('gallery/' + str(yyyy) + '/' + str(mm))
+                                if not os.path.exists('gallery/' + str(yyyy) + '/' + str(mm) + '/' + str(dd)):
+                                    os.makedirs('gallery/' + str(yyyy) + '/' + str(mm) + '/' + str(dd))
+
+                                img_title = 'gallery/' + str(yyyy) + '/' + str(mm) + '/' + str(dd) + '/' + str(url[32:-1]) + '.jpg'
+                                one_record.append(img_title)
+                                output = open(img_title, "wb")
+                                output.write(new_page_with_img.read())
+                                output.close()
+                        except:
+                            print 'couldn\'t open image'
+
                 all_records.append(one_record)
 
             # закончили парсить. сейвим
@@ -162,10 +191,11 @@ class OurNews(TemplateView):
                                            date=timezone.now(),
                                            category=record[0],
                                            header=record[2],
-                                           text=record[3])
+                                           text=record[3],
+                                           img=record[4])
                         qty_of_new += 1
                     except:  # исключение падения базы из-за какой нить херни
-                        pass
+                        print 'database was crushed while saving new data'
 
             print 'updated', qty_of_new, 'news'
             return HttpResponseRedirect('/')
