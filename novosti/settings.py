@@ -1,8 +1,13 @@
 # Django settings for rubliki project.
-
+from datetime import timedelta
+import os
+import djcelery
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+DJANGO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+TOP_ROOT = os.path.abspath(os.path.join(DJANGO_ROOT, os.pardir))
+djcelery.setup_loader()
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
@@ -18,6 +23,23 @@ DATABASES = {
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
     }
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '127.0.0.1:11211',
+        'KEY_PREFIX': 'novosti',
+        'TIMEOUT': '3600'
+    },
+    'redis': {
+        'BACKEND': 'redis_cache.RedisCache',
+        'LOCATION': 'localhost:6379',
+        'OPTIONS': {
+            'DB': 1,
+        },
+        'TIMEOUT': 0,
+    },
 }
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
@@ -49,8 +71,7 @@ USE_TZ = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/var/www/example.com/media/"
-MEDIA_ROOT = '/home/pilgrim/PycharmProjects/novosti/media'
-
+MEDIA_ROOT = os.path.join(DJANGO_ROOT, "media/media")
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://example.com/media/", "http://media.example.com/"
@@ -60,7 +81,7 @@ MEDIA_URL = '/media/'
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/var/www/example.com/static/"
-STATIC_ROOT = ''
+STATIC_ROOT = os.path.join(DJANGO_ROOT, "media/static")
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
@@ -68,6 +89,7 @@ STATIC_URL = '/static/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
+    os.path.join(DJANGO_ROOT, 'assets'),
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -121,8 +143,16 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'apps',
-    'south'
+    'south',
+    'djcelery',
 )
+
+CELERY_TIMEZONE = 'Europe/Moscow'
+BROKER_URL = "redis://localhost:6379/14"
+CELERYCAM_EXPIRE_SUCCESS = timedelta(days=14)
+CELERYCAM_EXPIRE_ERROR = timedelta(days=14)
+CELERY_RESULT_BACKEND = "redis://localhost:6379/14"
+CELERYD_HIJACK_ROOT_LOGGER = False
 # AUTH_USER_MODEL = 'apps.User'
 
 # A sample logging configuration. The only tangible logging

@@ -7,12 +7,10 @@ from forms import *
 import urllib2
 import lxml.html
 from django.utils import timezone  # во всем проекте поменял datetime.datetime на timezone
-
-
 from models import *
 from lenta import *
 import time
-
+from .libs import download_file
 import os
 
 
@@ -48,7 +46,7 @@ class OurNews(TemplateView):
         return context
 
     def post(self, request):
-        MY_DEBUG = False
+        MY_DEBUG = True
         if request.POST:
             dd = timezone.now().day
             mm = timezone.now().month
@@ -78,10 +76,15 @@ class OurNews(TemplateView):
                             massiv_of_pages.append(word)  # массив новых урлов готов
 
             # работа на новых страницах
-
             counter = 0
-            all_records = []
+            qty_of_new = 0
+            miss = 0
+            db_news = [new.url for new in New.objects.all()]
             for new_url in massiv_of_pages:
+                if new_url in db_news:
+                    # Если новость уже есть - не парсим!
+                    miss += 1
+                    continue
                 counter += 1
                 if MY_DEBUG:
                     if counter == 6:
@@ -149,6 +152,15 @@ class OurNews(TemplateView):
                         if 0x0a or 0x0d:  # if new line
                             one_record[3] += "\n\n"
                             length_of_string = 0
+                    # Сохраняем новость (без картинки)
+                    new = New.objects.create(source='lenta.ru',
+                                             url=one_record[1],
+                                             date=timezone.now(),
+                                             category=one_record[0],
+                                             header=one_record[2],
+                                             text=one_record[3])
+                    new.save()
+                    qty_of_new += 1
 
                     # парсим картинку
                     flag = 'http://icdn.lenta.ru/images/' + str(yyyy) + '/' + str(mm) + '/' + str(dd) + '/'
@@ -159,45 +171,39 @@ class OurNews(TemplateView):
                         try:
                             new_page_with_img = urllib2.urlopen(img_url)
                             if new_page_with_img.getcode() == 200:
-
-                                if not os.path.exists('gallery/' + str(yyyy)):
-                                    os.makedirs('gallery/' + str(yyyy))
-                                if not os.path.exists('gallery/' + str(yyyy) + '/' + str(mm)):
-                                    os.makedirs('gallery/' + str(yyyy) + '/' + str(mm))
-                                if not os.path.exists('gallery/' + str(yyyy) + '/' + str(mm) + '/' + str(dd)):
-                                    os.makedirs('gallery/' + str(yyyy) + '/' + str(mm) + '/' + str(dd))
-
-                                img_title = 'gallery/' + str(yyyy) + '/' + str(mm) + '/' + str(dd) + '/' + str(url[32:-1]) + '.jpg'
-                                one_record.append(img_title)
-                                output = open(img_title, "wb")
-                                output.write(new_page_with_img.read())
-                                output.close()
+                                # Заружаем и Добавляем картинку в нашу новость
+                                download_file(new, 'img1', url=img_url, save=True)
                         except:
                             print 'couldn\'t open image'
 
-                all_records.append(one_record)
+            # Судя по всему уже ненужно:
 
+                # all_records.append(one_record)
             # закончили парсить. сейвим
-            all_base = New.objects.all()
-            a = []
-            for i in all_base:
-                a.append(i.url)  # смотрю какие страницы в базе уже есть
-            qty_of_new = 0
-            for record in all_records:
-                if record[1] not in a:  # добавляю только те, которых у меня еще нет (новые)
-                    try:
-                        New.objects.create(source='lenta.ru',
-                                           url=record[1],
-                                           date=timezone.now(),
-                                           category=record[0],
-                                           header=record[2],
-                                           text=record[3],
-                                           img=record[4])
-                        qty_of_new += 1
-                    except:  # исключение падения базы из-за какой нить херни
-                        print 'database was crushed while saving new data'
+            # all_base = New.objects.all()
+            # a = []
+            # for i in all_base:
+            #     a.append(i.url)  # смотрю какие страницы в базе уже есть
+            # for record in all_records:
+            #     print record[5]
+            #     if record[1] not in a:  # добавляю только те, которых у меня еще нет (новые)
+            #         try:
+            #             # img =
+            #             New.objects.create(source='lenta.ru',
+            #                                url=record[1],
+            #                                date=timezone.now(),
+            #                                category=record[0],
+            #                                header=record[2],
+            #                                text=record[3],
+            #                                img=record[4])
+            #                                # img1=record[5])
+            #             print 'saved!!'
+            #             qty_of_new += 1
+            #         except:  # исключение падения базы из-за какой нить херни
+            #             print 'database was crushed while saving new data'
 
             print 'updated', qty_of_new, 'news'
+            print 'already have', miss, 'news'
             return HttpResponseRedirect('/')
 
 
