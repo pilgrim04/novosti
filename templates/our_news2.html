@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>News</title>
+</head>
+<body>
+{% block content %}
+{#<a href="/"></a><br>#}
+
+
+<table style="width: 70%" >
+    {% for i in records %}
+        <tr>
+            [{{ i.category }}]    <a href="{{ i.url[16:] }}"><b>{{ i.header }} </b></a>
+        </tr>
+        <br>
+        <tr>
+            {{ i.text[:i.text.index('.')] }}.
+
+        </tr>
+        <br>
+{#        <img src="{{ i.img }}">#}
+{#        {{ i.img }}#}
+
+        <br>
+    {% endfor %}
+</table>
+
+<a href="news/{{ yyyy }}/{{ mm }}/{{ dd }}">Читать все сегодняшние новости</a>
+{% endblock content %}
+</body>
+</html>

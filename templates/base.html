@@ -42,10 +42,11 @@
 
 
 {#                        <li><a href="/">Парсить</a></li>#}
-                        <form method="post">{% csrf_token %}
-                            <input type="submit" name="go_parse_lenta_ru" value="parse">
-                        </form>
-                        <a href="/">на главную</a>
+{#                        <form method="post">{% csrf_token %}#}
+{#                            <input type="submit" name="go_parse_lenta_ru" value="parse">#}
+{#                        </form>#}
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/news/{{ yyyy }}/{{ mm }}/{{ dd }}">За сегодня</a></li>
 
 {#                        <li><a href="#">#</a></li>#}
 {#                        <li><a href="#">#</a></li>#}

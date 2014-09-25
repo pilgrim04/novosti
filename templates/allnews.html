@@ -15,7 +15,12 @@
 {% for i in articles %}
     <a href="{{ i.url[32:] }}">{{ i.header }}</a>
     <br>
+    {% if i.img1 and i.id%10==0%}
+        <img src="{{ MEDIA_URL}}{{ i.img1 }}">
+    {% endif %}
+    <br>
 {% endfor %}
+
 
 {% endblock content %}
 </body>

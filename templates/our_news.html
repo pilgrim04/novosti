@@ -7,28 +7,32 @@
 </head>
 <body>
 {% block content %}
-{#<a href="/"></a><br>#}
+    {% if image %}
+        <img src="{{ MEDIA_URL}}{{ image }}">
+    {% else %}
+        <img src="{{ MEDIA_URL}}{{ image_next }}">
+    {% endif %}
+
+    <table style="width: 70%" >
 
 
-<table style="width: 70%" >
-    {% for i in records %}
-        <tr>
-            [{{ i.category }}]    <a href="{{ i.url[16:] }}"><b>{{ i.header }} </b></a>
-        </tr>
-        <br>
-        <tr>
-            {{ i.text[:i.text.index('.')] }}.
+        <br><br>
+        {% for i in records %}
+            <tr>
+                <a href="{{ i.url[16:] }}"><b>{{ i.header }} </b></a>
+            </tr>
+            <br>
 
-        </tr>
-        <br>
-        <img src="{{ MEDIA_URL}}{{ i.img1 }}">
-    {{ MEDIA_URL }}{{ i.img1 }}
+            <tr>
+                {% if i.text[:i.text.index('.')] != i.header %}
+                    {{ i.text[:i.text.index('.')] }}.
+                {% endif %}
+            </tr>
 
-        <br>
-    {% endfor %}
-</table>
+            <br><br>
+        {% endfor %}
+    </table>
 
-<a href="news/{{ yyyy }}/{{ mm }}/{{ dd }}">Читать все сегодняшние новости</a>
 {% endblock content %}
 </body>
 </html>

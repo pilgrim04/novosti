@@ -29,6 +29,8 @@ class OurNews(TemplateView):
         context = super(OurNews, self).get_context_data(**kwargs)
         qty_of_news = 3  # количество новостей на главной
         context['records'] = New.objects.all().order_by('-date')[:qty_of_news]
+        context['image'] = New.objects.order_by('-id')[0:1].get().img1
+        context['image_next'] = New.objects.order_by('-id')[1:2].get().img1
 
         dd = timezone.now().day
         mm = timezone.now().month
@@ -46,7 +48,7 @@ class OurNews(TemplateView):
         return context
 
     def post(self, request):
-        MY_DEBUG = True
+        MY_DEBUG = False
         if request.POST:
             dd = timezone.now().day
             mm = timezone.now().month
@@ -230,7 +232,7 @@ class AllNewsView(TemplateView):
         today = curr_year + '-' + curr_month + '-' + curr_day
         count = 0
         articles = []
-        for article in New.objects.all():
+        for article in New.objects.all().order_by('-id'):
             if unicode(article.date) >= today:
                 count += 1
                 articles.append(article)

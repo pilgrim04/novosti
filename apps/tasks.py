@@ -12,7 +12,7 @@ from .libs import download_file
 
 
 # TODO Раскоментировать для автоматического парсинга
-# @periodic_task(run_every=crontab())
+@periodic_task(run_every=crontab(minute='*/4'))
 def updated_parser():
     MY_DEBUG = True
     dd = timezone.now().day
@@ -48,7 +48,7 @@ def updated_parser():
     db_news = [new.url for new in New.objects.all()]
     for new_url in massiv_of_pages:
         if new_url in db_news:
-            # Если новость уже есть - не парсим!
+            # Если новость уже есть - не парсим! но лайки надо будет обновлять  в этом месте
             continue
         counter += 1
         if MY_DEBUG:

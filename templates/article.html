@@ -14,6 +14,10 @@
             [{{ article.category }}]    <b>{{ article.header }}</b>
         </tr>
         <br><br>
+        {% if article.img1 %}
+            <img src="{{ MEDIA_URL}}{{ article.img1 }}">
+        {% endif %}
+        <br>
         <tr>
             {{ article.text }}
             <br><br><br>
